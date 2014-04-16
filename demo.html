@@ -6,18 +6,25 @@
 </head>
 <body>
 <p>
-	QR Code Generator
+	<a href="http://www.dynamsoft.com/">Dynamsoft</a> QR Code Generator
 </p>
-<input type="text" id="text">
+<input type="text" id="text" placeholder="www.dynamsoft.com">
 <button onclick="generate()">Try it</button>
 
 <script src="jquery.min.js"></script>
 <script type="text/javascript" src="jquery.qrcode.min.js"></script>
 <script>
+jQuery(function(){jQuery('#output').qrcode("http://www.dynamsoft.com/");})
 function generate()
 {
 	jQuery(function(){
-		jQuery('#output').qrcode(document.getElementById("text").value);
+		var canvas = document.querySelector("canvas");
+		if (canvas != null && canvas.parentNode) {
+			canvas.parentNode.removeChild(canvas);
+		}
+		var text = document.getElementById("text");
+		jQuery('#output').qrcode(text.value);
+		text.value = "";
 	})
 }
 </script>

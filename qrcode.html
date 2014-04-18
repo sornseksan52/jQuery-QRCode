@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Demo page</title>
+		<meta http-equiv="Content-type" content="text/html;charset=UTF-8" />
+		<meta http-equiv="Content-Language" content="en-us" />
+
+		<script type="text/javascript" src="utf-8.js"></script>
+
+		<script type="text/javascript" src="jquery.min.js"></script>
+		<script type="text/javascript" src="jquery.qrcode.min.js"></script>
+
+		<script type="text/javascript" src="js/grid.js"></script>
+		<script type="text/javascript" src="js/version.js"></script>
+		<script type="text/javascript" src="js/detector.js"></script>
+		<script type="text/javascript" src="js/formatinf.js"></script>
+		<script type="text/javascript" src="js/errorlevel.js"></script>
+		<script type="text/javascript" src="js/bitmat.js"></script>
+		<script type="text/javascript" src="js/datablock.js"></script>
+		<script type="text/javascript" src="js/bmparser.js"></script>
+		<script type="text/javascript" src="js/datamask.js"></script>
+		<script type="text/javascript" src="js/rsdecoder.js"></script>
+		<script type="text/javascript" src="js/gf256poly.js"></script>
+		<script type="text/javascript" src="js/gf256.js"></script>
+		<script type="text/javascript" src="js/decoder.js"></script>
+		<script type="text/javascript" src="js/qrcode.js"></script>
+		<script type="text/javascript" src="js/findpat.js"></script>
+		<script type="text/javascript" src="js/alignpat.js"></script>
+		<script type="text/javascript" src="js/databr.js"></script>
+	</head>
+
+	<body>
+
+		<p>
+			<a href="http://www.dynamsoft.com/">Dynamsoft</a> QR Code Generator
+		</p>
+		<b>Write Barcode to Image</b>
+		<td style="width: 400px"> X:
+		<input type="text" size="256" style="width: 110px" id="locationX">
+		Y:
+		<input type="text" size="256" style="width: 110px" id="locationY">
+		<button id="do_it" onClick="writeBarcodeToCanvas()">
+			Do it!
+		</button>
+		<button id="do_it" onClick="saveImage()">
+			Save the Merged Image
+		</button></td>
+		<hr>
+		<input type="text" id="text" placeholder="www.dynamsoft.com">
+		<button onclick="generate()">
+			Generate QR Code
+		</button>
+		<button onclick="readQR()">
+			Read QR Code
+		</button>
+		<a id="read_qrcode"></a>
+
+		<script>
+			jQuery(function() {
+				jQuery('#output').qrcode("http://www.dynamsoft.com/");
+			})
+			function generate() {
+				jQuery(function() {
+					var canvas = document.querySelector("#output canvas");
+					if (canvas != null && canvas.parentNode) {
+						canvas.parentNode.removeChild(canvas);
+					}
+					var text = document.getElementById("text");
+					jQuery('#output').qrcode(Utf8.encode(text.value));
+					text.value = "";
+				})
+			}
+		</script>
+
+		<div id="output"></div>
+		<hr>
+
+		<div>
+			<a>load an image</a>
+			<input type="file" accept= "image/*" capture= "camera" id="upload_file" name="upload_file">
+			<input type="button" onclick="uploadEx()" value="Upload" />
+		</div>
+		<canvas id='load_image' width='600' height='600'></canvas>
+		<canvas id='merge_image' width='600' height='600'></canvas>
+		<form method="post" accept-charset="utf-8" name="form1" action="upload_data.php">
+			<input name="hidden_data" id='hidden_data'/>
+		</form>
+
+		<script>
+			var input = document.querySelector('input[type=file]');
+
+			input.onchange = function() {
+				var file = input.files[0];
+				var reader = new FileReader();
+
+				reader.onload = function(e) {
+					var dataURL = e.target.result, c = document.getElementById('load_image'), img = new Image();
+
+					img.onload = function() {
+						var height = img.height / (img.width / 400);
+						var ctx = c.getContext('2d');
+						ctx.drawImage(img, 0, 0, 400, height);
+					};
+
+					img.src = dataURL;
+				}
+				reader.readAsDataURL(file);
+			}
+			function writeBarcodeToCanvas() {
+				var canvasImage = document.getElementById("load_image");
+				/*	if (canvasImage.src == null) {
+				 alert('no image loaded');
+				 return;
+				 }
+				 */
+				var canvasBarcode = document.querySelector("#output canvas"), canvasMerge = document.getElementById('merge_image'), ctx = canvasMerge.getContext('2d'), x = document.getElementById('locationX'), y = document.getElementById('locationY');
+				ctx.clearRect(0, 0, canvasMerge.width, canvasMerge.height);
+				ctx.drawImage(canvasImage, 0, 0);
+				ctx.drawImage(canvasBarcode, x.value, y.value, 200, canvasBarcode.height / (canvasBarcode.width / 200));
+			}
+
+			function saveImage() {
+				var ua = window.navigator.userAgent;
+
+				if (ua.indexOf("Chrome") > 0) {
+					var canvas = document.getElementById("merge_image");
+					var link = document.createElement('a');
+					link.download = "test.png";
+					link.href = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+					link.click();
+				} else {
+					alert("Please use Chrome");
+				}
+			}
+
+			function readQR() {
+				var canvas = document.querySelector("#output canvas");
+				var context = canvas.getContext('2d');
+				qrcode.width = canvas.width;
+				qrcode.height = canvas.height;
+				qrcode.imagedata = context.getImageData(0, 0, qrcode.width, qrcode.height);
+				qrcode.result = qrcode.process(context);
+				var read_qrcode = document.getElementById('read_qrcode');
+				read_qrcode.innerHTML = Utf8.decode(qrcode.result);
+			}
+
+			function uploadEx() {
+				var canvas = document.getElementById("merge_image");
+				var dataURL = canvas.toDataURL("image/png");
+				document.getElementById('hidden_data').value = dataURL;
+				var fd = new FormData(document.forms["form1"]);
+
+				var xhr = new XMLHttpRequest();
+				xhr.open('POST', 'upload_data.php', true);
+
+				xhr.upload.onprogress = function(e) {
+					if (e.lengthComputable) {
+						var percentComplete = (e.loaded / e.total) * 100;
+						console.log(percentComplete + '% uploaded');
+					}
+				};
+
+				xhr.onload = function() {
+					if (this.status == 200) {
+						// var resp = JSON.parse(this.response);
+						// console.log('Server got:', resp);
+						console.log('done');
+						alert('Succesfully uploaded');
+					};
+				};
+				xhr.send(fd);
+			};
+		</script>
+	</body>
+</html>

@@ -50,6 +50,9 @@
 		<button onclick="generate()">
 			Generate QR Code
 		</button>
+		<button onclick="save()">
+			Save QR Code
+		</button>
 		<button onclick="readQR()">
 			Read QR Code
 		</button>
@@ -143,6 +146,25 @@
 				var read_qrcode = document.getElementById('read_qrcode');
 				read_qrcode.innerHTML = Utf8.decode(qrcode.result);
 			}
+
+			function save() {
+                            var ua = window.navigator.userAgent;
+                           
+                            if (ua.indexOf("Chrome") > 0) {
+                                   // save image without file type
+                                     var canvas = document.querySelector("#output canvas");
+                                  
+                                   // save image as png
+                                    var link = document.createElement('a');
+                             link.download = "test.png";
+                             link.href = canvas.toDataURL( "image/png").replace("image/png", "image/octet-stream" );;
+                           link.click();
+                           }
+                            else {
+                                  alert( "Please use Chrome" );
+                           }
+                     }
+
 
 			function uploadEx() {
 				var canvas = document.getElementById("merge_image");
